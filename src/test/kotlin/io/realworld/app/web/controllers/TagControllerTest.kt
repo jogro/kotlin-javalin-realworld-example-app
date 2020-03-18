@@ -1,8 +1,11 @@
 package io.realworld.app.web.controllers
 
-import io.javalin.Javalin
 import io.javalin.util.HttpUtil
-import io.realworld.app.config.AppConfig
+import io.kraftverk.Kraftverk
+import io.kraftverk.managed.Managed
+import io.kraftverk.managed.invoke
+import io.kraftverk.managed.stop
+import io.realworld.app.AppModule0
 import io.realworld.app.domain.Article
 import io.realworld.app.domain.ArticleDTO
 import io.realworld.app.domain.TagDTO
@@ -14,13 +17,13 @@ import org.junit.Before
 import org.junit.Test
 
 class TagControllerTest {
-    private lateinit var app: Javalin
+    private lateinit var app: Managed<AppModule0>
     private lateinit var http: HttpUtil
 
     @Before
     fun start() {
-        app = AppConfig().setup().start()
-        http = HttpUtil(app.port())
+        app = Kraftverk.start { AppModule0() }
+        http = HttpUtil(app { port })
     }
 
     @After

@@ -31,7 +31,7 @@ class ArticleService(private val articleRepository: ArticleRepository,
         }
     }
 
-    fun findBySlug(slug: String): Article? {
+    fun findBySlug(slug: String): Article {
         return articleRepository.findBySlug(slug) ?: throw NotFoundResponse()
     }
 

@@ -1,29 +1,29 @@
 package io.realworld.app.web.controllers
 
-import io.javalin.Javalin
 import io.javalin.util.HttpUtil
-import io.realworld.app.config.AppConfig
+import io.kraftverk.Kraftverk
+import io.kraftverk.managed.Managed
+import io.kraftverk.managed.invoke
+import io.kraftverk.managed.stop
+import io.realworld.app.AppModule0
 import io.realworld.app.domain.Article
 import io.realworld.app.domain.ArticleDTO
 import io.realworld.app.domain.ArticlesDTO
 import io.realworld.app.domain.ProfileDTO
 import org.eclipse.jetty.http.HttpStatus
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 class ArticleControllerTest {
-    private lateinit var app: Javalin
+    private lateinit var app: Managed<AppModule0>
     private lateinit var http: HttpUtil
 
     @Before
     fun start() {
-        app = AppConfig().setup().start()
-        http = HttpUtil(app.port())
+        app = Kraftverk.start { AppModule0() }
+        http = HttpUtil(app { port })
     }
 
     @After
@@ -34,7 +34,7 @@ class ArticleControllerTest {
     @Test
     fun `get all articles`() {
         http.createArticle()
-        val http = HttpUtil(app.port())
+        val http = HttpUtil(app { port })
         val response = http.get<ArticlesDTO>("/api/articles")
 
         assertEquals(response.status, HttpStatus.OK_200)
@@ -149,7 +149,7 @@ class ArticleControllerTest {
     fun `get all articles of feed`() {
         http.createArticle()
 
-        val http = HttpUtil(app.port())
+        val http = HttpUtil(app { port })
         http.createUser("celeb_follow_profile@valid_email.com", "celeb_username")
 
         http.post<ProfileDTO>("/api/profiles/user_name_test/follow")

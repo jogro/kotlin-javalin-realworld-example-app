@@ -1,27 +1,28 @@
 package io.realworld.app.web.controllers
 
-import io.javalin.Javalin
 import io.javalin.util.HttpUtil
-import io.realworld.app.config.AppConfig
+import io.kraftverk.Kraftverk
+import io.kraftverk.managed.Managed
+import io.kraftverk.managed.invoke
+import io.kraftverk.managed.stop
+import io.realworld.app.AppModule0
 import io.realworld.app.domain.User
 import io.realworld.app.domain.UserDTO
 import io.realworld.app.web.ErrorResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 class UserControllerTest {
-    private lateinit var app: Javalin
+    private lateinit var app: Managed<AppModule0>
     private lateinit var http: HttpUtil
 
     @Before
     fun start() {
-        app = AppConfig().setup().start()
-        http = HttpUtil(app.port())
+        app = Kraftverk.start { AppModule0() }
+        http = HttpUtil(app { port })
     }
 
     @After

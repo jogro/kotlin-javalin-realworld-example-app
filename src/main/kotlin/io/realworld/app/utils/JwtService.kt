@@ -6,7 +6,7 @@ import io.javalin.security.Role
 import io.realworld.app.domain.User
 import java.util.*
 
-class JwtProvider {
+class JwtService {
 
     fun decodeJWT(token: String): DecodedJWT = JWT.require(Cipher.algorithm).build().verify(token)
 

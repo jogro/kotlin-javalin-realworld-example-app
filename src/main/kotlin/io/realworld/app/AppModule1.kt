@@ -1,0 +1,91 @@
+package io.realworld.app
+
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import io.kraftverk.module.*
+import io.realworld.app.domain.repository.ArticleRepository
+import io.realworld.app.domain.repository.CommentRepository
+import io.realworld.app.domain.repository.TagRepository
+import io.realworld.app.domain.repository.UserRepository
+import io.realworld.app.domain.service.ArticleService
+import io.realworld.app.domain.service.CommentService
+import io.realworld.app.domain.service.TagService
+import io.realworld.app.domain.service.UserService
+import io.realworld.app.utils.JwtService
+import io.realworld.app.web.AuthService
+import io.realworld.app.web.Controllers
+import io.realworld.app.web.Gateway
+import io.realworld.app.web.controllers.*
+import org.h2.tools.Server
+
+class AppModule1 : Module() {
+
+    val http by module { HttpModule() }
+    val ctrl by module { ControllerModule() }
+    val srv by module { ServiceModule() }
+    val repo by module { RepositoryModule() }
+    val jdbc by module { JdbcModule() }
+    val common by module { CommonModule() }
+
+    inner class HttpModule : Module() {
+        val port by port()
+        val context by string()
+        val authService by bean { AuthService(common.jwtService()) }
+        val gateway by bean { Gateway(ctrl.controllers(), authService(), context(), port()) }
+
+        init {
+            onCreate(gateway) { it.start() }
+        }
+    }
+
+    inner class ControllerModule : Module() {
+        val controllers by bean {
+            Controllers(userController(), profileController(), articleController(), commentController(), tagController())
+        }
+        val userController by bean { UserController(srv.userService()) }
+        val articleController by bean { ArticleController(srv.articleService()) }
+        val profileController by bean { ProfileController(srv.userService()) }
+        val commentController by bean { CommentController(srv.commentService()) }
+        val tagController by bean { TagController(srv.tagService()) }
+    }
+
+    inner class ServiceModule : Module() {
+        val userService by bean { UserService(common.jwtService(), repo.userRepository()) }
+        val articleService by bean { ArticleService(repo.articleRepository(), repo.userRepository()) }
+        val commentService by bean { CommentService(repo.commentRepository()) }
+        val tagService by bean { TagService(repo.tagRepository()) }
+    }
+
+    inner class RepositoryModule : Module() {
+        val userRepository by bean { UserRepository(jdbc.dataSource()) }
+        val articleRepository by bean { ArticleRepository(jdbc.dataSource()) }
+        val commentRepository by bean { CommentRepository(jdbc.dataSource()) }
+        val tagRepository by bean { TagRepository(jdbc.dataSource()) }
+    }
+
+    class CommonModule : Module() {
+        val jwtService by bean { JwtService() }
+    }
+
+    class JdbcModule : Module() {
+        val url by string()
+        val username by string()
+        val password by string(secret = true)
+        val config by bean { HikariConfig() }
+        val dataSource by bean { HikariDataSource(config()) }
+        val h2Server by bean { Server.createWebServer() }
+
+        init {
+            customize(config) { c ->
+                c.jdbcUrl = url()
+                c.username = username()
+                c.password = password()
+            }
+            onCreate(h2Server) { it.start() }
+            onDestroy(h2Server) { it.stop() }
+        }
+    }
+
+}
+
+

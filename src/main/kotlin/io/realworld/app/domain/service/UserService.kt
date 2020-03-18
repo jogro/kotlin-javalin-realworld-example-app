@@ -9,11 +9,11 @@ import io.realworld.app.domain.Profile
 import io.realworld.app.domain.User
 import io.realworld.app.domain.repository.UserRepository
 import io.realworld.app.utils.Cipher
-import io.realworld.app.utils.JwtProvider
+import io.realworld.app.utils.JwtService
 import org.eclipse.jetty.http.HttpStatus
 import java.util.*
 
-class UserService(private val jwtProvider: JwtProvider, private val userRepository: UserRepository) {
+class UserService(private val jwtService: JwtService, private val userRepository: UserRepository) {
     private val base64Encoder = Base64.getEncoder()
 
     fun create(user: User): User {
@@ -54,7 +54,7 @@ class UserService(private val jwtProvider: JwtProvider, private val userReposito
     }
 
     private fun generateJwtToken(user: User): String? {
-        return jwtProvider.createJWT(user, Roles.AUTHENTICATED)
+        return jwtService.createJWT(user, Roles.AUTHENTICATED)
     }
 
     fun follow(email: String, usernameToFollow: String): Profile {
