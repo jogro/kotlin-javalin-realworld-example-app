@@ -11,10 +11,10 @@ import io.realworld.app.domain.service.ArticleService
 import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
+import io.realworld.app.web.route
+import io.realworld.app.web.server
 import io.realworld.app.utils.JwtService
 import io.realworld.app.web.AuthService
-import io.realworld.app.web.Controllers
-import io.realworld.app.web.Gateway
 import io.realworld.app.web.controllers.*
 import org.h2.tools.Server
 
@@ -29,19 +29,25 @@ class AppModule2 : Module() {
 
 class HttpModule : PartitionOf<AppModule2>() {
 
-    val controllers by ref { ctrl.controllers }
+    val ctrl by import { ctrl }
     val jwtService by ref { common.jwtService }
 
     val port by port()
     val context by string()
 
     val authService by bean { AuthService(jwtService()) }
-    val gateway by bean {
-        Gateway(controllers(), authService(), context(), port())
+
+    val server by server(authService, context, port) {
+        with(ctrl()) {
+            route(userController())
+            route(profileController())
+            route(articleController(), commentController())
+            route(tagController())
+        }
     }
 
     init {
-        onCreate(gateway) { it.start() }
+        onCreate(server) { it.start() }
     }
 }
 
@@ -49,9 +55,6 @@ class ControllerModule : PartitionOf<AppModule2>() {
 
     val srv by import { srv }
 
-    val controllers by bean {
-        Controllers(userController(), profileController(), articleController(), commentController(), tagController())
-    }
     val userController by bean { UserController(srv().userService()) }
     val articleController by bean { ArticleController(srv().articleService()) }
     val profileController by bean { ProfileController(srv().userService()) }

@@ -1,6 +1,5 @@
 package io.realworld.app
 
-import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.kraftverk.module.*
 import io.realworld.app.domain.repository.ArticleRepository
@@ -11,25 +10,27 @@ import io.realworld.app.domain.service.ArticleService
 import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
+import io.realworld.app.web.route
+import io.realworld.app.web.server
 import io.realworld.app.utils.JwtService
 import io.realworld.app.web.AuthService
-import io.realworld.app.web.Controllers
-import io.realworld.app.web.Gateway
 import io.realworld.app.web.controllers.*
 import org.h2.tools.Server
 
 class AppModule0 : Module() {
 
     // Http
-    val port by port("http.port")
     val context by string("http.context")
+    val port by port("http.port")
 
-    // Gateway
-    val gateway by bean { Gateway(controllers(), authService(), context(), port()) }
-    val controllers by bean {
-        Controllers(userController(), profileController(), articleController(), commentController(), tagController())
-    }
     val authService by bean { AuthService(jwtService()) }
+
+    val server by server(authService, context, port) {
+        route(userController())
+        route(profileController())
+        route(articleController(), commentController())
+        route(tagController())
+    }
 
     // User beans
     val userController by bean { UserController(userService()) }
@@ -61,18 +62,17 @@ class AppModule0 : Module() {
     val url by string("jdbc.url")
     val username by string("jdbc.username")
     val password by string("jdbc.password", secret = true)
-    val datasourceConfig by bean { HikariConfig() }
-    val dataSource by bean { HikariDataSource(datasourceConfig()) }
+    val dataSource by bean { HikariDataSource() }
     val h2Server by bean { Server.createWebServer() }
 
     init {
-        customize(datasourceConfig) { c ->
-            c.jdbcUrl = url()
-            c.username = username()
-            c.password = password()
+        customize(dataSource) { ds ->
+            ds.jdbcUrl = url()
+            ds.username = username()
+            ds.password = password()
         }
-        onCreate(gateway) { it.start() }
-        onDestroy(gateway) { it.stop() }
+        onCreate(server) { it.start() }
+        onDestroy(server) { it.stop() }
         onCreate(h2Server) { it.start() }
         onDestroy(h2Server) { it.stop() }
     }
