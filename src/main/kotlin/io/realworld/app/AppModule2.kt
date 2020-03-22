@@ -19,15 +19,15 @@ import io.realworld.app.web.controllers.*
 import org.h2.tools.Server
 
 class AppModule2 : Module() {
-    val http by partition { HttpModule() }
-    val ctrl by partition { ControllerModule() }
-    val srv by partition { ServiceModule() }
-    val repo by partition { RepositoryModule() }
-    val common by partition { CommonModule() }
+    val http by module { HttpModule() }
+    val ctrl by module { ControllerModule() }
+    val srv by module { ServiceModule() }
+    val repo by module { RepositoryModule() }
+    val common by module { CommonModule() }
     val jdbc by module { JdbcModule() }
 }
 
-class HttpModule : PartitionOf<AppModule2>() {
+class HttpModule : ModuleOf<AppModule2>() {
 
     val ctrl by import { ctrl }
     val jwtService by ref { common.jwtService }
@@ -51,7 +51,7 @@ class HttpModule : PartitionOf<AppModule2>() {
     }
 }
 
-class ControllerModule : PartitionOf<AppModule2>() {
+class ControllerModule : ModuleOf<AppModule2>() {
 
     val srv by import { srv }
 
@@ -62,7 +62,7 @@ class ControllerModule : PartitionOf<AppModule2>() {
     val tagController by bean { TagController(srv().tagService()) }
 }
 
-class ServiceModule : PartitionOf<AppModule2>() {
+class ServiceModule : ModuleOf<AppModule2>() {
 
     val repo by import { repo }
 
@@ -74,7 +74,7 @@ class ServiceModule : PartitionOf<AppModule2>() {
     val tagService by bean { TagService(repo().tagRepository()) }
 }
 
-class RepositoryModule : PartitionOf<AppModule2>() {
+class RepositoryModule : ModuleOf<AppModule2>() {
 
     val dataSource by ref { jdbc.dataSource }
 
@@ -84,7 +84,7 @@ class RepositoryModule : PartitionOf<AppModule2>() {
     val tagRepository by bean { TagRepository(dataSource()) }
 }
 
-class CommonModule : PartitionOf<AppModule2>() {
+class CommonModule : ModuleOf<AppModule2>() {
     val jwtService by bean { JwtService() }
 }
 

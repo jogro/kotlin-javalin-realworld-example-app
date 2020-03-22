@@ -10,11 +10,11 @@ import io.realworld.app.domain.service.ArticleService
 import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
-import io.realworld.app.web.route
-import io.realworld.app.web.server
 import io.realworld.app.utils.JwtService
 import io.realworld.app.web.AuthService
 import io.realworld.app.web.controllers.*
+import io.realworld.app.web.route
+import io.realworld.app.web.server
 import org.h2.tools.Server
 
 class AppModule0 : Module() {
@@ -33,7 +33,8 @@ class AppModule0 : Module() {
     }
 
     // User beans
-    val userController by bean { UserController(userService()) }
+    val userController by bean {
+        UserController(userService()) }
     val userService by bean { UserService(jwtService(), userRepository()) }
     val userRepository by bean { UserRepository(dataSource()) }
 

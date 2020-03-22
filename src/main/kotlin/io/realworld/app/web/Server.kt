@@ -11,9 +11,9 @@ import io.javalin.json.JavalinJackson
 import io.javalin.security.SecurityUtil.roles
 import io.kraftverk.binding.Bean
 import io.kraftverk.binding.Value
-import io.kraftverk.definition.BeanDefinition
-import io.kraftverk.definition.CustomBeanDefinition
-import io.kraftverk.module.Modular
+import io.kraftverk.declaration.BeanDeclaration
+import io.kraftverk.declaration.CustomBeanDeclaration
+import io.kraftverk.module.AbstractModule
 import io.kraftverk.module.bean
 import io.realworld.app.config.Roles.ANYONE
 import io.realworld.app.config.Roles.AUTHENTICATED
@@ -27,21 +27,21 @@ class Server(private val javalin: Javalin) {
     fun stop() = javalin.stop()
 }
 
-fun Modular.server(authService: Bean<AuthService>,
-                   contextPath: Value<String>,
-                   port: Value<Int>,
-                   block: ServerDefinition.() -> Unit) = bean {
+fun AbstractModule.server(authService: Bean<AuthService>,
+                          contextPath: Value<String>,
+                          port: Value<Int>,
+                          block: ServerDeclaration.() -> Unit) = bean {
     val javalin = createJavalin(authService(), contextPath(), port())
-    val definition = ServerDefinition(javalin, this)
+    val definition = ServerDeclaration(javalin, this)
     definition.block()
     Server(javalin)
 }
 
 val rolesOptionalAuthenticated = roles(ANYONE, AUTHENTICATED)
 
-class ServerDefinition(internal val javalin: Javalin, parent: BeanDefinition) : CustomBeanDefinition(parent)
+class ServerDeclaration(internal val javalin: Javalin, parent: BeanDeclaration) : CustomBeanDeclaration(parent)
 
-fun ServerDefinition.route(userController: UserController) = javalin.routes {
+fun ServerDeclaration.route(userController: UserController) = javalin.routes {
     path("users") {
         post(userController::register, roles(ANYONE))
         post("login", userController::login, roles(ANYONE))
@@ -52,7 +52,7 @@ fun ServerDefinition.route(userController: UserController) = javalin.routes {
     }
 }
 
-fun ServerDefinition.route(profileController: ProfileController) = javalin.routes {
+fun ServerDeclaration.route(profileController: ProfileController) = javalin.routes {
     path("profiles/:username") {
         get(profileController::get, rolesOptionalAuthenticated)
         path("follow") {
@@ -62,7 +62,7 @@ fun ServerDefinition.route(profileController: ProfileController) = javalin.route
     }
 }
 
-fun ServerDefinition.route(articleController: ArticleController, commentController: CommentController) = javalin.routes {
+fun ServerDeclaration.route(articleController: ArticleController, commentController: CommentController) = javalin.routes {
     path("articles") {
         get("feed", articleController::feed, roles(AUTHENTICATED))
         path(":slug") {
@@ -84,7 +84,7 @@ fun ServerDefinition.route(articleController: ArticleController, commentControll
     }
 }
 
-fun ServerDefinition.route(tagController: TagController) = javalin.routes {
+fun ServerDeclaration.route(tagController: TagController) = javalin.routes {
     path("tags") {
         get(tagController::get, rolesOptionalAuthenticated)
     }
