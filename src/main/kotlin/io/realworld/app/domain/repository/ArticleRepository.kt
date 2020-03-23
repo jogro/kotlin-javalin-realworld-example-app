@@ -3,24 +3,10 @@ package io.realworld.app.domain.repository
 import io.javalin.NotFoundResponse
 import io.realworld.app.domain.Article
 import io.realworld.app.domain.User
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import org.joda.time.DateTime
 import javax.sql.DataSource
 

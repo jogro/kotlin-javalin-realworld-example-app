@@ -3,19 +3,8 @@ package io.realworld.app.domain.repository
 import io.javalin.NotFoundResponse
 import io.realworld.app.domain.User
 import org.jetbrains.exposed.dao.LongIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
 import javax.sql.DataSource
 
 internal object Users : LongIdTable() {
