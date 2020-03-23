@@ -1,23 +1,17 @@
-package io.realworld.app.web
+package io.realworld.app.web.server
 
 import com.auth0.jwt.exceptions.JWTVerificationException
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.javalin.*
-import io.javalin.apibuilder.ApiBuilder
-import io.javalin.apibuilder.ApiBuilder.*
-import io.javalin.core.util.SwaggerRenderer
 import io.javalin.json.JavalinJackson
-import io.javalin.security.SecurityUtil.roles
 import io.kraftverk.binding.Bean
 import io.kraftverk.binding.Value
 import io.kraftverk.declaration.BeanDeclaration
 import io.kraftverk.declaration.CustomBeanDeclaration
 import io.kraftverk.module.AbstractModule
 import io.kraftverk.module.bean
-import io.realworld.app.config.Roles.ANYONE
-import io.realworld.app.config.Roles.AUTHENTICATED
-import io.realworld.app.web.controllers.*
+import io.realworld.app.web.auth.AuthService
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import java.text.SimpleDateFormat
@@ -30,65 +24,15 @@ class Server(private val javalin: Javalin) {
 fun AbstractModule.server(authService: Bean<AuthService>,
                           contextPath: Value<String>,
                           port: Value<Int>,
-                          block: ServerDeclaration.() -> Unit) = bean {
-    val javalin = createJavalin(authService(), contextPath(), port())
-    val definition = ServerDeclaration(javalin, this)
-    definition.block()
-    Server(javalin)
-}
-
-val rolesOptionalAuthenticated = roles(ANYONE, AUTHENTICATED)
+                          block: ServerDeclaration.() -> Unit) =
+        bean {
+            val javalin = createJavalin(authService(), contextPath(), port())
+            val declaration = ServerDeclaration(javalin, this)
+            declaration.block()
+            Server(javalin)
+        }
 
 class ServerDeclaration(internal val javalin: Javalin, parent: BeanDeclaration) : CustomBeanDeclaration(parent)
-
-fun ServerDeclaration.route(userController: UserController) = javalin.routes {
-    path("users") {
-        post(userController::register, roles(ANYONE))
-        post("login", userController::login, roles(ANYONE))
-    }
-    path("user") {
-        get(userController::getCurrent, roles(AUTHENTICATED))
-        put(userController::update, roles(AUTHENTICATED))
-    }
-}
-
-fun ServerDeclaration.route(profileController: ProfileController) = javalin.routes {
-    path("profiles/:username") {
-        get(profileController::get, rolesOptionalAuthenticated)
-        path("follow") {
-            post(profileController::follow, roles(AUTHENTICATED))
-            delete(profileController::unfollow, roles(AUTHENTICATED))
-        }
-    }
-}
-
-fun ServerDeclaration.route(articleController: ArticleController, commentController: CommentController) = javalin.routes {
-    path("articles") {
-        get("feed", articleController::feed, roles(AUTHENTICATED))
-        path(":slug") {
-            path("comments") {
-                post(commentController::add, roles(AUTHENTICATED))
-                get(commentController::findBySlug, rolesOptionalAuthenticated)
-                delete(":id", commentController::delete, roles(AUTHENTICATED))
-            }
-            path("favorite") {
-                post(articleController::favorite, roles(AUTHENTICATED))
-                delete(articleController::unfavorite, roles(AUTHENTICATED))
-            }
-            get(articleController::get, rolesOptionalAuthenticated)
-            put(articleController::update, roles(AUTHENTICATED))
-            delete(articleController::delete, roles(AUTHENTICATED))
-        }
-        get(articleController::findBy, rolesOptionalAuthenticated)
-        post(articleController::create, roles(AUTHENTICATED))
-    }
-}
-
-fun ServerDeclaration.route(tagController: TagController) = javalin.routes {
-    path("tags") {
-        get(tagController::get, rolesOptionalAuthenticated)
-    }
-}
 
 internal data class ErrorResponse(val errors: Map<String, List<String?>>)
 
@@ -99,9 +43,6 @@ private fun createJavalin(authService: AuthService, contextPath: String, port: I
             if (authService.authorize(ctx, permittedRoles)) {
                 handler.handle(ctx)
             } else throw ForbiddenResponse()
-        }
-        routes {
-            ApiBuilder.get("", SwaggerRenderer("swagger/api.yaml"), rolesOptionalAuthenticated)
         }
         exception(Exception::class.java) { e, ctx ->
             //LOG.error("Exception occurred for req -> ${ctx.url()}", e)

@@ -11,11 +11,12 @@ import io.realworld.app.domain.service.ArticleService
 import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
-import io.realworld.app.web.route
-import io.realworld.app.web.server
 import io.realworld.app.utils.JwtService
-import io.realworld.app.web.AuthService
+import io.realworld.app.web.auth.AuthService
 import io.realworld.app.web.controllers.*
+import io.realworld.app.web.server.route
+import io.realworld.app.web.server.server
+import io.realworld.app.web.server.swagger
 import org.h2.tools.Server
 
 class AppModule1 : Module() {
@@ -36,6 +37,7 @@ class AppModule1 : Module() {
 
         val server by server(authService, context, port) {
             with(ctrl){
+                swagger("api.yaml")
                 route(userController())
                 route(profileController())
                 route(articleController(), ctrl.commentController())

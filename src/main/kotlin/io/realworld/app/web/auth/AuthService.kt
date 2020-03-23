@@ -1,4 +1,4 @@
-package io.realworld.app.web
+package io.realworld.app.web.auth
 
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.javalin.Context

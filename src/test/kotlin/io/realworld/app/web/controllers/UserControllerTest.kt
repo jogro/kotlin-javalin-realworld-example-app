@@ -8,7 +8,7 @@ import io.kraftverk.managed.stop
 import io.realworld.app.AppModule0
 import io.realworld.app.domain.User
 import io.realworld.app.domain.UserDTO
-import io.realworld.app.web.ErrorResponse
+import io.realworld.app.web.server.ErrorResponse
 import org.eclipse.jetty.http.HttpStatus
 import org.junit.After
 import org.junit.Assert.*
