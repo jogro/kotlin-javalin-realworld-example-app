@@ -11,7 +11,7 @@ import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
 import io.realworld.app.utils.JwtService
-import io.realworld.app.web.auth.AuthService
+import io.realworld.app.web.server.Authorizer
 import io.realworld.app.web.controllers.*
 import io.realworld.app.web.server.route
 import io.realworld.app.web.server.server
@@ -24,9 +24,9 @@ class AppModule0 : Module() {
     val context by string("http.context")
     val port by port("http.port")
 
-    val authService by bean { AuthService(jwtService()) }
+    val authorizer by bean { Authorizer(jwtService()) }
 
-    val server by server(authService, context, port) {
+    val server by server(authorizer, context, port) {
         swagger("api.yaml")
         route(userController())
         route(profileController())

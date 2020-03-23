@@ -11,7 +11,6 @@ import io.kraftverk.declaration.BeanDeclaration
 import io.kraftverk.declaration.CustomBeanDeclaration
 import io.kraftverk.module.AbstractModule
 import io.kraftverk.module.bean
-import io.realworld.app.web.auth.AuthService
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import java.text.SimpleDateFormat
@@ -21,12 +20,12 @@ class Server(private val javalin: Javalin) {
     fun stop() = javalin.stop()
 }
 
-fun AbstractModule.server(authService: Bean<AuthService>,
+fun AbstractModule.server(authorizer: Bean<Authorizer>,
                           contextPath: Value<String>,
                           port: Value<Int>,
                           block: ServerDeclaration.() -> Unit) =
         bean {
-            val javalin = createJavalin(authService(), contextPath(), port())
+            val javalin = createJavalin(authorizer(), contextPath(), port())
             val declaration = ServerDeclaration(javalin, this)
             declaration.block()
             Server(javalin)
@@ -36,11 +35,11 @@ class ServerDeclaration(internal val javalin: Javalin, parent: BeanDeclaration) 
 
 internal data class ErrorResponse(val errors: Map<String, List<String?>>)
 
-private fun createJavalin(authService: AuthService, contextPath: String, port: Int): Javalin {
+private fun createJavalin(authorizer: Authorizer, contextPath: String, port: Int): Javalin {
     return Javalin.create().apply {
         enableCorsForAllOrigins().contextPath(contextPath)
         accessManager { handler, ctx, permittedRoles ->
-            if (authService.authorize(ctx, permittedRoles)) {
+            if (authorizer.authorize(ctx, permittedRoles)) {
                 handler.handle(ctx)
             } else throw ForbiddenResponse()
         }

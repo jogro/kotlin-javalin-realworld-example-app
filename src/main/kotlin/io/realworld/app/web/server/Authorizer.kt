@@ -1,4 +1,4 @@
-package io.realworld.app.web.auth
+package io.realworld.app.web.server
 
 import com.auth0.jwt.interfaces.DecodedJWT
 import io.javalin.Context
@@ -6,19 +6,16 @@ import io.javalin.security.Role
 import io.realworld.app.config.Roles
 import io.realworld.app.utils.JwtService
 
-class AuthService(private val jwtService: JwtService) {
+class Authorizer(private val jwtService: JwtService) {
 
     fun authorize(ctx: Context, permittedRoles: Set<Role>): Boolean {
-        val authorizationToken = ctx.authorizationToken?.let(jwtService::decodeJWT)
-        val userRole = authorizationToken?.role ?: Roles.ANYONE
-        if (userRole in permittedRoles) {
-            ctx.attribute("email", authorizationToken?.subject)
-            return true
+        val token = ctx.authToken?.let(jwtService::decodeJWT)?.also {
+            ctx.attribute("email", it.subject)
         }
-        return false
+        return (token?.role ?: Roles.ANYONE) in permittedRoles
     }
 
-    private val Context.authorizationToken: String?
+    private val Context.authToken: String?
         get() = header("Authorization")
                 ?.substringAfter("Token")
                 ?.trim()
