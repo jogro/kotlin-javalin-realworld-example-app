@@ -2,7 +2,10 @@ package io.realworld.app
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.kraftverk.module.*
+import io.kraftverk.core.module.Module
+import io.kraftverk.core.module.module
+import io.kraftverk.core.module.port
+import io.kraftverk.core.module.string
 import io.realworld.app.domain.repository.ArticleRepository
 import io.realworld.app.domain.repository.CommentRepository
 import io.realworld.app.domain.repository.TagRepository
@@ -12,8 +15,8 @@ import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
 import io.realworld.app.utils.JwtService
-import io.realworld.app.web.server.Authorizer
 import io.realworld.app.web.controllers.*
+import io.realworld.app.web.server.Authorizer
 import io.realworld.app.web.server.route
 import io.realworld.app.web.server.server
 import io.realworld.app.web.server.swagger
@@ -36,7 +39,7 @@ class AppModule1 : Module() {
         val authorizer by bean { Authorizer(common.jwtService()) }
 
         val server by server(authorizer, context, port) {
-            with(ctrl){
+            with(ctrl) {
                 swagger("api.yaml")
                 route(userController())
                 route(profileController())
@@ -46,7 +49,13 @@ class AppModule1 : Module() {
         }
 
         init {
-            onCreate(server) { it.start() }
+            configure(server) {
+                lifecycle {
+                    onCreate { it.start() }
+                    onDestroy { it.stop() }
+                }
+
+            }
         }
     }
 
@@ -85,13 +94,17 @@ class AppModule1 : Module() {
         val h2Server by bean { Server.createWebServer() }
 
         init {
-            customize(config) { c ->
-                c.jdbcUrl = url()
-                c.username = username()
-                c.password = password()
+            configure(config) {
+                it.jdbcUrl = url()
+                it.username = username()
+                it.password = password()
             }
-            onCreate(h2Server) { it.start() }
-            onDestroy(h2Server) { it.stop() }
+            configure(h2Server) {
+                lifecycle {
+                    onCreate { it.start() }
+                    onDestroy { it.stop() }
+                }
+            }
         }
     }
 

@@ -5,12 +5,11 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.javalin.*
 import io.javalin.json.JavalinJackson
-import io.kraftverk.binding.Bean
-import io.kraftverk.binding.Value
-import io.kraftverk.declaration.BeanDeclaration
-import io.kraftverk.declaration.CustomBeanDeclaration
-import io.kraftverk.module.AbstractModule
-import io.kraftverk.module.bean
+import io.kraftverk.core.binding.Bean
+import io.kraftverk.core.binding.Value
+import io.kraftverk.core.declaration.BeanDeclaration
+import io.kraftverk.core.declaration.CustomBeanDeclaration
+import io.kraftverk.core.module.Module
 import org.eclipse.jetty.http.HttpStatus
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import java.text.SimpleDateFormat
@@ -20,10 +19,10 @@ class Server(private val javalin: Javalin) {
     fun stop() = javalin.stop()
 }
 
-fun AbstractModule.server(authorizer: Bean<Authorizer>,
-                          contextPath: Value<String>,
-                          port: Value<Int>,
-                          block: ServerDeclaration.() -> Unit) =
+fun Module.server(authorizer: Bean<Authorizer>,
+                  contextPath: Value<String>,
+                  port: Value<Int>,
+                  block: ServerDeclaration.() -> Unit) =
         bean {
             val javalin = createJavalin(authorizer(), contextPath(), port())
             val declaration = ServerDeclaration(javalin, this)

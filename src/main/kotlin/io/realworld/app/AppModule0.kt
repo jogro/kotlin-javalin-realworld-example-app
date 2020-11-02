@@ -1,7 +1,9 @@
 package io.realworld.app
 
 import com.zaxxer.hikari.HikariDataSource
-import io.kraftverk.module.*
+import io.kraftverk.core.module.Module
+import io.kraftverk.core.module.port
+import io.kraftverk.core.module.string
 import io.realworld.app.domain.repository.ArticleRepository
 import io.realworld.app.domain.repository.CommentRepository
 import io.realworld.app.domain.repository.TagRepository
@@ -11,8 +13,8 @@ import io.realworld.app.domain.service.CommentService
 import io.realworld.app.domain.service.TagService
 import io.realworld.app.domain.service.UserService
 import io.realworld.app.utils.JwtService
-import io.realworld.app.web.server.Authorizer
 import io.realworld.app.web.controllers.*
+import io.realworld.app.web.server.Authorizer
 import io.realworld.app.web.server.route
 import io.realworld.app.web.server.server
 import io.realworld.app.web.server.swagger
@@ -68,15 +70,23 @@ class AppModule0 : Module() {
     val h2Server by bean { Server.createWebServer() }
 
     init {
-        customize(dataSource) { ds ->
-            ds.jdbcUrl = url()
-            ds.username = username()
-            ds.password = password()
+        configure(dataSource) {
+            it.jdbcUrl = url()
+            it.username = username()
+            it.password = password()
         }
-        onCreate(server) { it.start() }
-        onDestroy(server) { it.stop() }
-        onCreate(h2Server) { it.start() }
-        onDestroy(h2Server) { it.stop() }
+        configure(server) {
+            lifecycle {
+                onCreate { it.start() }
+                onDestroy { it.stop() }
+            }
+        }
+        configure(h2Server) {
+            lifecycle {
+                onCreate { it.start() }
+                onDestroy { it.stop() }
+            }
+        }
     }
 
 }
